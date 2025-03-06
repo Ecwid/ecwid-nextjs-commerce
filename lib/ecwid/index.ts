@@ -397,11 +397,10 @@ const reshapeProduct = (
 
     if (variants.length > 0 && variantsCombinations.length > 0) {
         variants.forEach((variant) => {
-            let keys: string[] = variant.options.map(({ name, value }) => `${name}:${value}`);//.join('|');
+            let keys: string[] = variant.options.map(({ name, value }) => `${name}:${value}`); //.join('|');
 
             variantsCombinations.map((combination) => {
-                if (!keys.find(x => combination.id.indexOf(x) == -1)) {
-
+                if (!keys.find((x) => combination.id.indexOf(x) == -1)) {
                     combination.availableForSale = variant.inStock;
                     combination.price = variant.price ? variant.price : productPrice;
 
@@ -409,7 +408,6 @@ const reshapeProduct = (
                         if (variant.price > maxPrice) maxPrice = variant.price;
                         if (variant.price < minPrice) minPrice = variant.price;
                     }
-
                 }
             });
         });
@@ -558,21 +556,23 @@ export async function removeFromCart(cartId: string, lineIds: string[]): Promise
             selectedOptions[`${option[0]}`] = { type: 'DROPDOWN', choice: `${option[1]}` };
         });
     } else {
-        selectedOptions = undefined;
+        selectedOptions = {};
     }
 
     const res = await ecwidFetch<EcwidCheckout>({
         method: 'POST',
-        path: `/checkout/remove-cart-item`,
+        path: `/checkout/remove-cart-items`,
         useStorefrontAPI: true,
         cache: 'no-store',
         tags: [TAGS.cart],
         payload: {
             lang: 'en',
-            cartItemIdentifier: {
-                productId: productId,
-                selectedOptions: selectedOptions
-            }
+            cartItemIdentifiers: [
+                {
+                    productId: productId,
+                    selectedOptions: selectedOptions
+                }
+            ]
         },
         headers: {
             Authorization: 'Bearer ' + sessionToken
@@ -725,7 +725,7 @@ export async function getCollections(): Promise<Collection[]> {
 }
 
 export async function getCollection(handle: string): Promise<Collection | undefined> {
-    let categoryId = handle.replace(/.*(?<=-c)/, '');
+    let categoryId = handle.replace(/^.*?\-c/g, '');
 
     const res = await ecwidFetch<EcwidNode>({
         method: 'GET',
@@ -751,7 +751,7 @@ export async function getCollectionProducts({
         baseUrl: '/'
     };
 
-    let categoryId = collection.replace(/.*(?<=-c)/, '');
+    let categoryId = collection.replace(/^.*?\-c/g, '');
 
     if (collection != 'hidden-homepage-carousel' && collection != 'hidden-homepage-featured-items') {
         query.categories = `${categoryId}`;
@@ -805,7 +805,7 @@ export async function getProducts({
 }
 
 export async function getProduct(handle: string): Promise<Product | undefined> {
-    let productId = handle.replace(/.*(?<=-p)/, '');
+    let productId = handle.replace(/^.*?\-p/g, '');
 
     const res = await ecwidFetch<EcwidNode>({
         method: 'GET',
