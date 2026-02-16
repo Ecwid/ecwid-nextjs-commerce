@@ -11,9 +11,10 @@ export const runtime = 'edge';
 export async function generateMetadata({
   params
 }: {
-  params: { collection: string };
+  params: Promise<{ collection: string }>;
 }): Promise<Metadata> {
-  const collection = await getCollection(params.collection);
+  const { collection: collectionSlug } = await params;
+  const collection = await getCollection(collectionSlug);
 
   if (!collection) return notFound();
 
@@ -28,12 +29,17 @@ export default async function CategoryPage({
   params,
   searchParams
 }: {
-  params: { collection: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
+  params: Promise<{ collection: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { sort } = searchParams as { [key: string]: string };
+  const [resolvedParams, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const { sort } = (resolvedSearchParams || {}) as { [key: string]: string };
   const { sortKey, reverse } = sorting.find((item) => item.slug === sort) || defaultSort;
-  const products = await getCollectionProducts({ collection: params.collection, sortKey, reverse });
+  const products = await getCollectionProducts({
+    collection: resolvedParams.collection,
+    sortKey,
+    reverse
+  });
 
   return (
     <section>

@@ -1,37 +1,37 @@
 export type SortFilterItem = {
-    title: string;
-    slug: string | null;
-    sortKey: 'relevance' | 'added_time' | 'price';
-    reverse: boolean;
+  title: string;
+  slug: string | null;
+  sortKey: 'relevance' | 'added_time' | 'price';
+  reverse: boolean;
 };
 
 export const defaultSort: SortFilterItem = {
-    title: 'Relevance',
-    slug: null,
-    sortKey: 'relevance',
-    reverse: false
+  title: 'Relevance',
+  slug: null,
+  sortKey: 'relevance',
+  reverse: false
 };
 
 export const sorting: SortFilterItem[] = [
-    defaultSort,
-    { title: 'Latest arrivals', slug: 'latest-desc', sortKey: 'added_time', reverse: true },
-    { title: 'Price: Low to high', slug: 'price-asc', sortKey: 'price', reverse: false }, // asc
-    { title: 'Price: High to low', slug: 'price-desc', sortKey: 'price', reverse: true }
+  defaultSort,
+  { title: 'Latest arrivals', slug: 'latest-desc', sortKey: 'added_time', reverse: true },
+  { title: 'Price: Low to high', slug: 'price-asc', sortKey: 'price', reverse: false }, // asc
+  { title: 'Price: High to low', slug: 'price-desc', sortKey: 'price', reverse: true }
 ];
 
 // Can't remove TAGS as used internally
 export const TAGS = {
-    collections: 'collections',
-    products: 'products',
-    pages: 'pages',
-    cart: 'cart',
-    profile: 'profile'
+  collections: 'collections',
+  products: 'products',
+  pages: 'pages',
+  cart: 'cart',
+  profile: 'profile'
 };
 
 export const defaultImage = {
-    url: '/images/default-image.svg',
-    width: 100,
-    height: 100
+  url: '/images/default-image.svg',
+  width: 100,
+  height: 100
 };
 
 export const DEFAULT_OPTION = 'Default';

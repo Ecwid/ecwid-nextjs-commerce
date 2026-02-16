@@ -1,37 +1,37 @@
 import { isEcwidError } from 'lib/type-guards';
 
 import {
-    Cart,
-    CartItem,
-    Collection,
-    EcwidAdjustedPrice,
-    EcwidCart,
-    EcwidCartItem,
-    EcwidCheckout,
-    EcwidCurrencyNode,
-    EcwidMedia,
-    EcwidNode,
-    EcwidOrder,
-    EcwidPagedResult,
-    EcwidPrice,
-    EcwidProductOption,
-    EcwidRelatedProducts,
-    EcwidVariation,
-    Image,
-    Menu,
-    Money,
-    Product,
-    ProductOption,
-    ProductVariant
+  Cart,
+  CartItem,
+  Collection,
+  EcwidAdjustedPrice,
+  EcwidCart,
+  EcwidCartItem,
+  EcwidCheckout,
+  EcwidCurrencyNode,
+  EcwidMedia,
+  EcwidNode,
+  EcwidOrder,
+  EcwidPagedResult,
+  EcwidPrice,
+  EcwidProductOption,
+  EcwidRelatedProducts,
+  EcwidVariation,
+  Image,
+  Menu,
+  Money,
+  Product,
+  ProductOption,
+  ProductVariant
 } from './types';
 
 import {
-    DEFAULT_CURRENCY_CODE,
-    DEFAULT_OPTION,
-    ECWID_API_URL,
-    ECWID_STOREFRONT_API_URL,
-    TAGS,
-    defaultImage
+  DEFAULT_CURRENCY_CODE,
+  DEFAULT_OPTION,
+  ECWID_API_URL,
+  ECWID_STOREFRONT_API_URL,
+  TAGS,
+  defaultImage
 } from 'lib/constants';
 
 import { cartesianProduct } from 'lib/utils';
@@ -46,853 +46,859 @@ const storefront_api_endpoint = `${ECWID_STOREFRONT_API_URL}${store_id}`;
 
 var currencyCode: string = DEFAULT_CURRENCY_CODE;
 getStoreCurrencyCode().then((res) => {
-    currencyCode = res;
+  currencyCode = res;
 });
 
 export async function ecwidFetch<T>({
-    method,
-    path,
-    useStorefrontAPI,
-    query,
-    headers,
-    cache,
-    tags,
-    payload,
-    revalidate
+  method,
+  path,
+  useStorefrontAPI,
+  query,
+  headers,
+  cache,
+  tags,
+  payload,
+  revalidate
 }: {
-    method: string;
-    path: string;
-    useStorefrontAPI?: boolean;
-    query?: Record<string, string | string[]>;
-    headers?: HeadersInit;
-    cache?: RequestCache;
-    tags?: string[];
-    payload?: any | undefined;
-    revalidate?: number;
+  method: string;
+  path: string;
+  useStorefrontAPI?: boolean;
+  query?: Record<string, string | string[]>;
+  headers?: HeadersInit;
+  cache?: RequestCache;
+  tags?: string[];
+  payload?: any | undefined;
+  revalidate?: number;
 }): Promise<{ status: number; body: T } | never> {
-    try {
-        var options: RequestInit = {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: 'Bearer ' + process.env.ECWID_API_KEY!,
-                ...headers
-            },
-            cache: cache,
-            ...(tags && { next: { tags: tags } })
-        };
+  try {
+    var options: RequestInit = {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + process.env.ECWID_API_KEY!,
+        ...headers
+      },
+      cache: cache,
+      ...(tags && { next: { tags: tags } })
+    };
 
-        if (revalidate) {
-            options.next = { ...options.next, ...{ revalidate: revalidate } };
-            console.log(options.next);
-        }
-
-        if (payload) {
-            options.body = JSON.stringify(payload);
-        }
-
-        let url;
-
-        if (useStorefrontAPI) {
-            url = storefront_api_endpoint + path;
-        } else {
-            url = api_endpoint + path;
-        }
-
-        if (query) {
-            const searchParams = new URLSearchParams();
-
-            Object.entries(query).forEach(([key, values]) => {
-                if (Array.isArray(values)) {
-                    values.forEach((value) => {
-                        searchParams.append(key, value);
-                    });
-                } else {
-                    searchParams.append(key, values);
-                }
-            });
-
-            url += url.indexOf('?') >= 0 ? '&' : '?';
-            url += searchParams.toString();
-        }
-
-        const result = await fetch(url, options);
-
-        let body;
-
-        try {
-            body = await result.json();
-        } catch (e) {
-            body = false;
-        }
-
-        if (body.errors) {
-            console.log(body.errors);
-            throw body.errors[0];
-        }
-
-        return {
-            status: result.status,
-            body
-        };
-    } catch (e) {
-        if (isEcwidError(e)) {
-            throw {
-                status: e.status || 500,
-                message: e.message
-            };
-        }
-
-        throw {
-            error: e
-        };
+    if (revalidate) {
+      options.next = { ...options.next, ...{ revalidate: revalidate } };
+      console.log(options.next);
     }
+
+    if (payload) {
+      options.body = JSON.stringify(payload);
+    }
+
+    let url;
+
+    if (useStorefrontAPI) {
+      url = storefront_api_endpoint + path;
+    } else {
+      url = api_endpoint + path;
+    }
+
+    if (query) {
+      const searchParams = new URLSearchParams();
+
+      Object.entries(query).forEach(([key, values]) => {
+        if (Array.isArray(values)) {
+          values.forEach((value) => {
+            searchParams.append(key, value);
+          });
+        } else {
+          searchParams.append(key, values);
+        }
+      });
+
+      url += url.indexOf('?') >= 0 ? '&' : '?';
+      url += searchParams.toString();
+    }
+
+    const result = await fetch(url, options);
+
+    let body;
+
+    try {
+      body = await result.json();
+    } catch (e) {
+      body = false;
+    }
+
+    if (body.errors) {
+      console.log(body.errors);
+      throw body.errors[0];
+    }
+
+    return {
+      status: result.status,
+      body
+    };
+  } catch (e) {
+    if (isEcwidError(e)) {
+      throw {
+        status: e.status || 500,
+        message: e.message
+      };
+    }
+
+    throw {
+      error: e
+    };
+  }
 }
 
 export async function getStoreCurrencyCode(): Promise<string> {
-    let query = <Record<string, string | string[]>>{
-        responseFields: 'formatsAndUnits(currency)'
-    };
+  const query = <Record<string, string | string[]>>{
+    responseFields: 'formatsAndUnits(currency)'
+  };
 
-    const res = await ecwidFetch<EcwidCurrencyNode>({
-        method: 'GET',
-        path: `/profile`,
-        query: query,
-        tags: [TAGS.profile]
-        // cache: 'no-store',
-        // revalidate: 20
-    });
+  const res = await ecwidFetch<EcwidCurrencyNode>({
+    method: 'GET',
+    path: `/profile`,
+    query: query,
+    tags: [TAGS.profile]
+    // cache: 'no-store',
+    // revalidate: 20
+  });
 
-    if (!res.body) {
-        return DEFAULT_CURRENCY_CODE;
-    }
+  if (!res.body) {
+    return DEFAULT_CURRENCY_CODE;
+  }
 
-    return res.body.formatsAndUnits.currency;
+  return res.body.formatsAndUnits.currency;
 }
 
 const reshapeImage = (img: EcwidMedia): Image => {
-    return {
-        url: img.url,
-        altText: img.name || '',
-        width: img.width,
-        height: img.height
-    };
+  return {
+    url: img.url,
+    altText: img.name || '',
+    width: img.width,
+    height: img.height
+  };
 };
 
-const reshapeAdjustedPrice = (price: EcwidAdjustedPrice): Money => reshapePrice(price.value);
+const _reshapeAdjustedPrice = (price: EcwidAdjustedPrice): Money => reshapePrice(price.value);
 
 const reshapePrice = (price: EcwidPrice): Money => {
-    return {
-        amount: price.withTax.toString(),
-        currencyCode: price.currency.code
-    };
+  return {
+    amount: price.withTax.toString(),
+    currencyCode: price.currency.code
+  };
 };
 
 const reshapeAmountsPrice = (price: number): Money => {
-    return {
-        amount: price.toString(),
-        currencyCode: currencyCode
-    };
+  return {
+    amount: price.toString(),
+    currencyCode: currencyCode
+  };
 };
 
 const reshapeOrder = (order: EcwidOrder): Cart => {
-    var quantity = order?.cartItems?.reduce((n, { quantity }) => n + quantity, 0) || 0;
+  var quantity = order?.cartItems?.reduce((n, { quantity }) => n + quantity, 0) || 0;
 
-    var lines: CartItem[] = [];
-    if (quantity > 0) {
-        lines = order?.cartItems?.map((item) => reshapeOrderLine(item)) || [];
-    }
+  var lines: CartItem[] = [];
+  if (quantity > 0) {
+    lines = order?.cartItems?.map((item) => reshapeOrderLine(item)) || [];
+  }
 
-    return {
-        id: order.id,
-        checkoutUrl: `/checkout?id=${order.id}`,
-        totalQuantity: quantity,
-        cost: {
-            subtotalAmount: reshapeAmountsPrice(order.amounts.subtotal),
-            totalAmount: reshapeAmountsPrice(order.amounts.total),
-            totalTaxAmount: reshapeAmountsPrice(order.amounts.tax)
-        },
-        lines: lines
-    };
+  return {
+    id: order.id,
+    checkoutUrl: `/checkout?id=${order.id}`,
+    totalQuantity: quantity,
+    cost: {
+      subtotalAmount: reshapeAmountsPrice(order.amounts.subtotal),
+      totalAmount: reshapeAmountsPrice(order.amounts.total),
+      totalTaxAmount: reshapeAmountsPrice(order.amounts.tax)
+    },
+    lines: lines
+  };
 };
 
 const reshapeOrderLine = (orderLine: EcwidCartItem): CartItem => {
-    var imgUrl = orderLine.productInfo?.mediaItem
-        ? orderLine.productInfo?.mediaItem.image160pxUrl
-        : '';
+  var imgUrl = orderLine.productInfo?.mediaItem
+    ? orderLine.productInfo?.mediaItem.image160pxUrl
+    : '';
 
-    var productId = orderLine.identifier.productId.toString();
+  var productId = orderLine.identifier.productId.toString();
 
-    var selectedOptions = orderLine.identifier?.selectedOptions
-        ? Object.entries(orderLine.identifier?.selectedOptions).map((opt: any) => ({
-            name: opt[0],
-            value: opt[1].choice
-        }))
-        : [];
+  var selectedOptions = orderLine.identifier?.selectedOptions
+    ? Object.entries(orderLine.identifier?.selectedOptions).map((opt: any) => ({
+        name: opt[0],
+        value: opt[1].choice
+      }))
+    : [];
 
-    if (selectedOptions.length > 0) {
-        productId += '|' + selectedOptions.map(({ name, value }) => `${name}:${value}`).join('|');
-    }
+  if (selectedOptions.length > 0) {
+    productId += '|' + selectedOptions.map(({ name, value }) => `${name}:${value}`).join('|');
+  }
 
-    var subTitle =
-        selectedOptions.length > 0
-            ? selectedOptions?.map(({ name, value }) => `${name}:${value}`).join(', ')
-            : DEFAULT_OPTION;
+  var subTitle =
+    selectedOptions.length > 0
+      ? selectedOptions?.map(({ name, value }) => `${name}:${value}`).join(', ')
+      : DEFAULT_OPTION;
 
-    return {
-        id: productId, // [Required]
-        merchandise: {
-            id: productId, // [Required]
-            title: subTitle,
-            selectedOptions: selectedOptions,
-            product: {
-                id: productId,
-                // handle: productId, // [Required]
-                handle: `${orderLine.productInfo.slugs.forRouteWithId}-p${productId}`, // [Required]
-                availableForSale: true,
-                title: orderLine.productInfo.name, // [Required]
-                description: '',
-                descriptionHtml: '',
-                options: [],
-                priceRange: {
-                    maxVariantPrice: {
-                        amount: orderLine.price.toString(),
-                        currencyCode: currencyCode
-                    },
-                    minVariantPrice: {
-                        amount: orderLine.price.toString(),
-                        currencyCode: currencyCode
-                    }
-                },
-                featuredImage: {
-                    // [Required]
-                    url: imgUrl,
-                    altText: orderLine.productInfo.name,
-                    width: 0,
-                    height: 0
-                },
-                seo: {
-                    title: '',
-                    description: ''
-                },
-                tags: [TAGS.cart],
-                updatedAt: new Date().toISOString(),
-                variants: [],
-                images: []
-            }
+  return {
+    id: productId, // [Required]
+    merchandise: {
+      id: productId, // [Required]
+      title: subTitle,
+      selectedOptions: selectedOptions,
+      product: {
+        id: productId,
+        // handle: productId, // [Required]
+        handle: `${orderLine.productInfo.slugs.forRouteWithId}-p${productId}`, // [Required]
+        availableForSale: true,
+        title: orderLine.productInfo.name, // [Required]
+        description: '',
+        descriptionHtml: '',
+        options: [],
+        priceRange: {
+          maxVariantPrice: {
+            amount: orderLine.price.toString(),
+            currencyCode: currencyCode
+          },
+          minVariantPrice: {
+            amount: orderLine.price.toString(),
+            currencyCode: currencyCode
+          }
         },
-        quantity: orderLine.quantity, // [Required]
-        cost: {
-            // [Required]
-            totalAmount: reshapeAmountsPrice(orderLine.price)
-        }
-    };
+        featuredImage: {
+          // [Required]
+          url: imgUrl,
+          altText: orderLine.productInfo.name,
+          width: 0,
+          height: 0
+        },
+        seo: {
+          title: '',
+          description: ''
+        },
+        tags: [TAGS.cart],
+        updatedAt: new Date().toISOString(),
+        variants: [],
+        images: []
+      }
+    },
+    quantity: orderLine.quantity, // [Required]
+    cost: {
+      // [Required]
+      totalAmount: reshapeAmountsPrice(orderLine.price)
+    }
+  };
 };
 
 const reshapeCollection = (node: EcwidNode): Collection | undefined => {
-    if (!node) {
-        return undefined;
-    }
+  if (!node) {
+    return undefined;
+  }
 
-    let metaTitle = node.seoTitle?.toString() || node.name;
-    let metaDescription = node.seoDescription?.toString() || node.description;
+  const metaTitle = node.seoTitle?.toString() || node.name;
+  const metaDescription = node.seoDescription?.toString() || node.description;
 
-    return {
-        handle: node.id.toString(),
-        title: node.name,
-        description: node.description?.toString(),
-        seo: {
-            title: metaTitle,
-            description: metaDescription
-        },
-        path: `${node.url}`,
-        updatedAt: ''
-    };
+  return {
+    handle: node.id.toString(),
+    title: node.name,
+    description: node.description?.toString(),
+    seo: {
+      title: metaTitle,
+      description: metaDescription
+    },
+    path: `${node.url}`,
+    updatedAt: ''
+  };
 };
 
 const reshapeCollections = (nodes: EcwidNode[]): Collection[] => {
-    return <Collection[]>(nodes || []).map((n) => reshapeCollection(n)).filter((n) => !!n);
+  return <Collection[]>(nodes || []).map((n) => reshapeCollection(n)).filter((n) => !!n);
 };
 
 const reshapeProduct = (
-    node: EcwidNode,
-    filterHiddenProducts: boolean = true
+  node: EcwidNode,
+  filterHiddenProducts: boolean = true
 ): Product | undefined => {
-    if (!node || (filterHiddenProducts && !node.enabled)) {
-        return undefined;
-    }
+  if (!node || (filterHiddenProducts && !node.enabled)) {
+    return undefined;
+  }
 
-    let nodeHandle = encodeURIComponent(node.url.replace(/^\/+|\/+$/g, ''));
+  const nodeHandle = encodeURIComponent(node.url.replace(/^\/+|\/+$/g, ''));
 
-    let minPrice = 0;
-    let maxPrice = 0;
+  let minPrice = 0;
+  let maxPrice = 0;
 
-    let metaTitle = node.seoTitle?.toString() || node.name;
-    let metaDescription = node.seoDescription?.toString() || node.description;
+  const metaTitle = node.seoTitle?.toString() || node.name;
+  const metaDescription = node.seoDescription?.toString() || node.description;
 
-    let product = <Product>{
+  const product = <Product>{
+    id: `${node.id}`,
+    handle: nodeHandle,
+    title: node.name,
+    description: node.description,
+    descriptionHtml: node.description,
+    availableForSale: node.inStock,
+    seo: {
+      title: metaTitle,
+      description: metaDescription
+    },
+    options: <ProductOption[]>[],
+    variants: <ProductVariant[]>[],
+    tags: 'a' || [],
+    updatedAt: node.updateDate || 0
+  };
+
+  var productPrice = node.price;
+  if (productPrice) {
+    minPrice = node.compareToPrice || node.price;
+    maxPrice = node.price;
+
+    product.variants = [
+      {
         id: `${node.id}`,
-        handle: nodeHandle,
         title: node.name,
-        description: node.description,
-        descriptionHtml: node.description,
         availableForSale: node.inStock,
-        seo: {
-            title: metaTitle,
-            description: metaDescription
-        },
-        options: <ProductOption[]>[],
-        variants: <ProductVariant[]>[],
-        tags: 'a' || [],
-        updatedAt: node.updateDate || 0
-    };
+        selectedOptions: [],
+        price: productPrice
+      }
+    ];
+  }
 
-    var productPrice = node.price;
-    if (productPrice) {
-        minPrice = node.compareToPrice || node.price;
-        maxPrice = node.price;
+  const options = node.options as EcwidProductOption[];
+  const variants = node.combinations as EcwidVariation[];
 
-        product.variants = [
-            {
-                id: `${node.id}`,
-                title: node.name,
-                availableForSale: node.inStock,
-                selectedOptions: [],
-                price: productPrice
-            }
-        ];
-    }
+  const variantsCombinations = <ProductVariant[]>[];
 
-    let options = node.options as EcwidProductOption[];
-    let variants = node.combinations as EcwidVariation[];
+  if (options.length > 0) {
+    product.options = options.map((attr) => ({
+      id: attr.name,
+      name: attr.name,
+      values: attr.choices.map((val) => val.text)
+    }));
 
-    let variantsCombinations = <ProductVariant[]>[];
+    // api doesn't return all options combinations, so we shuffle that handly
+    const allOptions = options.map((attr) =>
+      attr.choices.map((val) => ({ name: attr.name, value: val.text }))
+    );
+    const optionsCombinations = cartesianProduct(...allOptions);
 
-    if (options.length > 0) {
-        product.options = options.map((attr) => ({
-            id: attr.name,
-            name: attr.name,
-            values: attr.choices.map((val) => val.text)
-        }));
-
-        // api doesn't return all options combinations, so we shuffle that handly
-        let allOptions = options.map((attr) =>
-            attr.choices.map((val) => ({ name: attr.name, value: val.text }))
-        );
-        let optionsCombinations = cartesianProduct(...allOptions);
-
-        if (optionsCombinations.length > 0) {
-            optionsCombinations.forEach((options) => {
-                variantsCombinations.push(<ProductVariant>{
-                    id: `${node.id}` + '|' + options.map(({ name, value }) => `${name}:${value}`).join('|'),
-                    title:
-                        node.name + '(' + options.map(({ name, value }) => `${name}:${value}`).join(', ') + ')',
-                    availableForSale: node.inStock,
-                    selectedOptions: options,
-                    price: productPrice // to-do: If the variation exists, need to find out its price
-                });
-            });
-        }
-    }
-
-    if (variants.length > 0 && variantsCombinations.length > 0) {
-        variants.forEach((variant) => {
-            let keys: string[] = variant.options.map(({ name, value }) => `${name}:${value}`); //.join('|');
-
-            variantsCombinations.map((combination) => {
-                if (!keys.find((x) => combination.id.indexOf(x) == -1)) {
-                    combination.availableForSale = variant.inStock;
-                    combination.price = variant.price ? variant.price : productPrice;
-
-                    if (combination.availableForSale) {
-                        if (variant.price > maxPrice) maxPrice = variant.price;
-                        if (variant.price < minPrice) minPrice = variant.price;
-                    }
-                }
-            });
+    if (optionsCombinations.length > 0) {
+      optionsCombinations.forEach((options) => {
+        variantsCombinations.push(<ProductVariant>{
+          id: `${node.id}` + '|' + options.map(({ name, value }) => `${name}:${value}`).join('|'),
+          title:
+            node.name + '(' + options.map(({ name, value }) => `${name}:${value}`).join(', ') + ')',
+          availableForSale: node.inStock,
+          selectedOptions: options,
+          price: productPrice // to-do: If the variation exists, need to find out its price
         });
+      });
     }
+  }
 
-    if (variantsCombinations.length > 0) {
-        product.variants = variantsCombinations;
-    }
+  if (variants.length > 0 && variantsCombinations.length > 0) {
+    variants.forEach((variant) => {
+      const keys: string[] = variant.options.map(({ name, value }) => `${name}:${value}`); //.join('|');
 
-    product.images = [] as EcwidMedia[];
+      variantsCombinations.map((combination) => {
+        if (!keys.find((x) => combination.id.indexOf(x) == -1)) {
+          combination.availableForSale = variant.inStock;
+          combination.price = variant.price ? variant.price : productPrice;
 
-    let media = node.galleryImages as EcwidMedia[];
-    if (media.length > 0) {
-        var images = media.map((m) => reshapeImage(m));
-        product.images = images;
-    }
+          if (combination.availableForSale) {
+            if (variant.price > maxPrice) maxPrice = variant.price;
+            if (variant.price < minPrice) minPrice = variant.price;
+          }
+        }
+      });
+    });
+  }
 
-    product.featuredImage = node.originalImage as EcwidMedia;
+  if (variantsCombinations.length > 0) {
+    product.variants = variantsCombinations;
+  }
 
-    if (product.featuredImage) product.images.unshift(product.featuredImage);
+  product.images = [] as EcwidMedia[];
 
-    if (!product.featuredImage) {
-        product.featuredImage = defaultImage;
-    }
+  const media = node.galleryImages as EcwidMedia[];
+  if (media.length > 0) {
+    var images = media.map((m) => reshapeImage(m));
+    product.images = images;
+  }
 
-    product.priceRange = {
-        minVariantPrice: { amount: minPrice.toString(), currencyCode: currencyCode },
-        maxVariantPrice: { amount: maxPrice.toString(), currencyCode: currencyCode }
-    };
+  product.featuredImage = node.originalImage as EcwidMedia;
 
-    return product;
+  if (product.featuredImage) product.images.unshift(product.featuredImage);
+
+  if (!product.featuredImage) {
+    product.featuredImage = defaultImage;
+  }
+
+  product.priceRange = {
+    minVariantPrice: { amount: minPrice.toString(), currencyCode: currencyCode },
+    maxVariantPrice: { amount: maxPrice.toString(), currencyCode: currencyCode }
+  };
+
+  return product;
 };
 
 const reshapeProducts = (nodes: EcwidNode[]): Product[] => {
-    return <Product[]>(nodes || []).map((n) => reshapeProduct(n)).filter((n) => !!n);
+  return <Product[]>(nodes || []).map((n) => reshapeProduct(n)).filter((n) => !!n);
 };
 
 export async function createCart(): Promise<Cart> {
-    const res = await ecwidFetch<EcwidCart>({
-        method: 'POST',
-        path: `/checkout/create`,
-        useStorefrontAPI: true,
-        cache: 'no-store',
-        tags: [TAGS.cart],
-        payload: {
-            lang: 'en'
-        }
-    });
+  const res = await ecwidFetch<EcwidCart>({
+    method: 'POST',
+    path: `/checkout/create`,
+    useStorefrontAPI: true,
+    cache: 'no-store',
+    tags: [TAGS.cart],
+    payload: {
+      lang: 'en'
+    }
+  });
 
-    let cartId = res.body.checkoutId;
+  const cartId = res.body.checkoutId;
 
-    cookies().set(`ec-${store_id}-session`, res.body.sessionToken);
+  const cookieStore = await cookies();
+  cookieStore.set(`ec-${store_id}-session`, res.body.sessionToken);
 
-    return {
-        id: cartId,
-        sessionToken: res.body.sessionToken,
-        checkoutUrl: '',
-        cost: {
-            subtotalAmount: {
-                amount: '',
-                currencyCode: ''
-            },
-            totalAmount: {
-                amount: '',
-                currencyCode: ''
-            },
-            totalTaxAmount: {
-                amount: '',
-                currencyCode: ''
-            }
-        },
-        lines: [],
-        totalQuantity: 0
-    };
+  return {
+    id: cartId,
+    sessionToken: res.body.sessionToken,
+    checkoutUrl: '',
+    cost: {
+      subtotalAmount: {
+        amount: '',
+        currencyCode: ''
+      },
+      totalAmount: {
+        amount: '',
+        currencyCode: ''
+      },
+      totalTaxAmount: {
+        amount: '',
+        currencyCode: ''
+      }
+    },
+    lines: [],
+    totalQuantity: 0
+  };
 }
 
 export async function addToCart(
-    cartId: string,
-    lines: { merchandiseId: string; quantity: number }[]
+  cartId: string,
+  lines: { merchandiseId: string; quantity: number }[]
 ): Promise<Cart | undefined> {
-    // We assume there is only one item to be added at a time
-    // which looking at the code is the case. May need to keep
-    // track to see if it ever gets implemented that multiple
-    // items can be added at once.
-    var line = lines[0];
-    var idParts = line!.merchandiseId.split('|');
+  // We assume there is only one item to be added at a time
+  // which looking at the code is the case. May need to keep
+  // track to see if it ever gets implemented that multiple
+  // items can be added at once.
+  const line = lines[0];
+  const idParts = line!.merchandiseId.split('|');
 
-    let productId = idParts[0];
-    let sessionToken = cookies().get(`ec-${store_id}-session`)?.value;
+  const productId = idParts[0];
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(`ec-${store_id}-session`)?.value;
 
-    let selectedOptions = {} as any;
+  const selectedOptions = {} as any;
 
-    if (idParts.length > 1) {
-        idParts.shift();
+  if (idParts.length > 1) {
+    idParts.shift();
 
-        idParts.map((part) => {
-            let option = part.split(':');
-            selectedOptions[`${option[0]}`] = { type: 'DROPDOWN', choice: `${option[1]}` };
-        });
-    }
-
-    const res = await ecwidFetch<EcwidCheckout>({
-        method: 'POST',
-        path: `/checkout/add-cart-item`,
-        useStorefrontAPI: true,
-        cache: 'no-store',
-        tags: [TAGS.cart],
-        payload: {
-            lang: 'en',
-            newCartItem: {
-                identifier: {
-                    productId: productId,
-                    selectedOptions: selectedOptions
-                },
-                quantity: 1,
-                categoryId: 0,
-                isPreorder: false
-            }
-        },
-        headers: {
-            Authorization: 'Bearer ' + sessionToken
-        }
+    idParts.map((part) => {
+      const option = part.split(':');
+      selectedOptions[`${option[0]}`] = { type: 'DROPDOWN', choice: `${option[1]}` };
     });
+  }
 
-    return reshapeOrder(res.body.checkout);
+  const res = await ecwidFetch<EcwidCheckout>({
+    method: 'POST',
+    path: `/checkout/add-cart-item`,
+    useStorefrontAPI: true,
+    cache: 'no-store',
+    tags: [TAGS.cart],
+    payload: {
+      lang: 'en',
+      newCartItem: {
+        identifier: {
+          productId: productId,
+          selectedOptions: selectedOptions
+        },
+        quantity: 1,
+        categoryId: 0,
+        isPreorder: false
+      }
+    },
+    headers: {
+      Authorization: 'Bearer ' + sessionToken
+    }
+  });
+
+  return reshapeOrder(res.body.checkout);
 }
 
 export async function removeFromCart(cartId: string, lineIds: string[]): Promise<Cart> {
-    // We assume there is only one item to be removed at a time
-    // which looking at the code is the case. May need to keep
-    // track to see if it ever gets implemented that multiple
-    // items can be removed at once.
-    let line = lineIds[0];
-    let idParts = line!.split('|');
-    let productId = idParts[0];
+  // We assume there is only one item to be removed at a time
+  // which looking at the code is the case. May need to keep
+  // track to see if it ever gets implemented that multiple
+  // items can be removed at once.
+  const line = lineIds[0];
+  const idParts = line!.split('|');
+  const productId = idParts[0];
 
-    let sessionToken = cookies().get(`ec-${store_id}-session`)?.value;
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(`ec-${store_id}-session`)?.value;
 
-    let selectedOptions = {} as any | undefined;
+  let selectedOptions = {} as any | undefined;
 
-    if (idParts.length > 1) {
-        idParts.shift();
+  if (idParts.length > 1) {
+    idParts.shift();
 
-        idParts.map((part) => {
-            let option = part.split(':');
-            selectedOptions[`${option[0]}`] = { type: 'DROPDOWN', choice: `${option[1]}` };
-        });
-    } else {
-        selectedOptions = {};
-    }
-
-    const res = await ecwidFetch<EcwidCheckout>({
-        method: 'POST',
-        path: `/checkout/remove-cart-items`,
-        useStorefrontAPI: true,
-        cache: 'no-store',
-        tags: [TAGS.cart],
-        payload: {
-            lang: 'en',
-            cartItemIdentifiers: [
-                {
-                    productId: productId,
-                    selectedOptions: selectedOptions
-                }
-            ]
-        },
-        headers: {
-            Authorization: 'Bearer ' + sessionToken
-        }
+    idParts.map((part) => {
+      const option = part.split(':');
+      selectedOptions[`${option[0]}`] = { type: 'DROPDOWN', choice: `${option[1]}` };
     });
+  } else {
+    selectedOptions = {};
+  }
 
-    return reshapeOrder(res.body.checkout);
+  const res = await ecwidFetch<EcwidCheckout>({
+    method: 'POST',
+    path: `/checkout/remove-cart-items`,
+    useStorefrontAPI: true,
+    cache: 'no-store',
+    tags: [TAGS.cart],
+    payload: {
+      lang: 'en',
+      cartItemIdentifiers: [
+        {
+          productId: productId,
+          selectedOptions: selectedOptions
+        }
+      ]
+    },
+    headers: {
+      Authorization: 'Bearer ' + sessionToken
+    }
+  });
+
+  return reshapeOrder(res.body.checkout);
 }
 
 export async function updateCart(
-    cartId: string,
-    lines: { id: string; merchandiseId: string; quantity: number }[]
+  cartId: string,
+  lines: { id: string; merchandiseId: string; quantity: number }[]
 ): Promise<Cart> {
-    let sessionToken = cookies().get(`ec-${store_id}-session`)?.value;
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(`ec-${store_id}-session`)?.value;
 
-    var line = lines[0];
-    var idParts = line!.merchandiseId.split('|');
-    let productId = idParts[0];
+  const line = lines[0];
+  const idParts = line!.merchandiseId.split('|');
+  const productId = idParts[0];
 
-    await removeFromCart(cartId, [line!.merchandiseId]);
+  await removeFromCart(cartId, [line!.merchandiseId]);
 
-    let selectedOptions = {} as any;
+  const selectedOptions = {} as any;
 
-    if (idParts.length > 1) {
-        idParts.shift();
+  if (idParts.length > 1) {
+    idParts.shift();
 
-        idParts.map((part) => {
-            let option = part.split(':');
-            selectedOptions[`${option[0]}`] = { type: 'DROPDOWN', choice: `${option[1]}` };
-        });
-    }
-
-    const res = await ecwidFetch<EcwidCheckout>({
-        method: 'POST',
-        path: `/checkout/add-cart-item`,
-        useStorefrontAPI: true,
-        cache: 'no-store',
-        tags: [TAGS.cart],
-        payload: {
-            lang: 'en',
-            newCartItem: {
-                identifier: {
-                    productId: productId,
-                    selectedOptions: selectedOptions
-                },
-                quantity: line?.quantity,
-                categoryId: 0,
-                isPreorder: false
-            }
-        },
-        headers: {
-            Authorization: 'Bearer ' + sessionToken
-        }
+    idParts.map((part) => {
+      const option = part.split(':');
+      selectedOptions[`${option[0]}`] = { type: 'DROPDOWN', choice: `${option[1]}` };
     });
+  }
 
-    return reshapeOrder(res.body.checkout);
+  const res = await ecwidFetch<EcwidCheckout>({
+    method: 'POST',
+    path: `/checkout/add-cart-item`,
+    useStorefrontAPI: true,
+    cache: 'no-store',
+    tags: [TAGS.cart],
+    payload: {
+      lang: 'en',
+      newCartItem: {
+        identifier: {
+          productId: productId,
+          selectedOptions: selectedOptions
+        },
+        quantity: line?.quantity,
+        categoryId: 0,
+        isPreorder: false
+      }
+    },
+    headers: {
+      Authorization: 'Bearer ' + sessionToken
+    }
+  });
+
+  return reshapeOrder(res.body.checkout);
 }
 
-export async function getCart(cartId: string): Promise<Cart | undefined> {
-    let sessionToken = cookies().get(`ec-${store_id}-session`)?.value;
+export async function getCart(_cartId: string): Promise<Cart | undefined> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(`ec-${store_id}-session`)?.value;
 
-    if (!sessionToken) {
-        return undefined;
+  if (!sessionToken) {
+    return undefined;
+  }
+
+  const res = await ecwidFetch<EcwidCheckout>({
+    method: 'POST',
+    path: `/checkout`,
+    useStorefrontAPI: true,
+    cache: 'no-store',
+    tags: [TAGS.cart],
+    payload: {
+      lang: 'en'
+    },
+    headers: {
+      Authorization: 'Bearer ' + sessionToken
     }
+  });
 
-    const res = await ecwidFetch<EcwidCheckout>({
-        method: 'POST',
-        path: `/checkout`,
-        useStorefrontAPI: true,
-        cache: 'no-store',
-        tags: [TAGS.cart],
-        payload: {
-            lang: 'en'
-        },
-        headers: {
-            Authorization: 'Bearer ' + sessionToken
-        }
-    });
+  if (!res.body) {
+    return undefined;
+  }
 
-    if (!res.body) {
-        return undefined;
-    }
-
-    return reshapeOrder(res.body.checkout);
+  return reshapeOrder(res.body.checkout);
 }
 
 export async function getMenu(handle: string): Promise<Menu[]> {
-    if (handle == 'next-js-frontend-footer-menu') {
-        return [];
-    }
+  if (handle == 'next-js-frontend-footer-menu') {
+    return [];
+  }
 
-    let query = <Record<string, string | string[]>>{
-        parent: '0',
-        limit: '2',
-        cleanUrls: 'true',
-        baseUrl: '/search'
-    };
+  const query = <Record<string, string | string[]>>{
+    parent: '0',
+    limit: '2',
+    cleanUrls: 'true',
+    baseUrl: '/search'
+  };
 
-    const res = await ecwidFetch<EcwidPagedResult<EcwidNode>>({
-        method: 'GET',
-        path: `/categories`,
-        tags: [TAGS.collections],
-        query: query
-    });
+  const res = await ecwidFetch<EcwidPagedResult<EcwidNode>>({
+    method: 'GET',
+    path: `/categories`,
+    tags: [TAGS.collections],
+    query: query
+  });
 
-    let menu =
-        res.body?.items?.map((collection) => ({
-            path: `${collection.url}`,
-            title: collection.name
-        })) || [];
+  const menu =
+    res.body?.items?.map((collection) => ({
+      path: `${collection.url}`,
+      title: collection.name
+    })) || [];
 
-    return [
-        {
-            title: 'All',
-            path: '/search'
-        },
-        ...menu
-    ];
+  return [
+    {
+      title: 'All',
+      path: '/search'
+    },
+    ...menu
+  ];
 }
 
 export async function getCollections(): Promise<Collection[]> {
-    let baseUrl = '/search';
+  const baseUrl = '/search';
 
-    const res = await ecwidFetch<EcwidPagedResult<EcwidNode>>({
-        method: 'GET',
-        path: `/categories`,
-        tags: [TAGS.collections],
-        query: {
-            cleanUrls: 'true',
-            baseUrl: baseUrl
-        }
-    });
+  const res = await ecwidFetch<EcwidPagedResult<EcwidNode>>({
+    method: 'GET',
+    path: `/categories`,
+    tags: [TAGS.collections],
+    query: {
+      cleanUrls: 'true',
+      baseUrl: baseUrl
+    }
+  });
 
-    const collections = [
-        {
-            handle: '',
-            title: 'All',
-            description: 'All products',
-            seo: {
-                title: 'All',
-                description: 'All products'
-            },
-            path: baseUrl,
-            updatedAt: new Date().toISOString()
-        },
-        ...reshapeCollections(res.body?.items)
-    ];
+  const collections = [
+    {
+      handle: '',
+      title: 'All',
+      description: 'All products',
+      seo: {
+        title: 'All',
+        description: 'All products'
+      },
+      path: baseUrl,
+      updatedAt: new Date().toISOString()
+    },
+    ...reshapeCollections(res.body?.items)
+  ];
 
-    return <Collection[]>collections;
+  return <Collection[]>collections;
 }
 
 export async function getCollection(handle: string): Promise<Collection | undefined> {
-    let categoryId = handle.replace(/^.*?\-c/g, '');
+  const categoryId = handle.replace(/^.*?\-c/g, '');
 
-    const res = await ecwidFetch<EcwidNode>({
-        method: 'GET',
-        path: `/categories/${categoryId}`,
-        tags: [TAGS.collections]
-    });
+  const res = await ecwidFetch<EcwidNode>({
+    method: 'GET',
+    path: `/categories/${categoryId}`,
+    tags: [TAGS.collections]
+  });
 
-    return reshapeCollection(res.body);
+  return reshapeCollection(res.body);
 }
 
 export async function getCollectionProducts({
-    collection,
-    reverse,
-    sortKey
+  collection,
+  reverse: _reverse,
+  sortKey: _sortKey
 }: {
-    collection: string;
-    reverse?: boolean;
-    sortKey?: string;
+  collection: string;
+  reverse?: boolean;
+  sortKey?: string;
 }): Promise<Product[]> {
-    let query = <Record<string, string | string[]>>{
-        enabled: 'true',
-        cleanUrls: 'true',
-        baseUrl: '/'
-    };
+  const query = <Record<string, string | string[]>>{
+    enabled: 'true',
+    cleanUrls: 'true',
+    baseUrl: '/'
+  };
 
-    let categoryId = collection.replace(/^.*?\-c/g, '');
+  const categoryId = collection.replace(/^.*?\-c/g, '');
 
-    if (collection != 'hidden-homepage-carousel' && collection != 'hidden-homepage-featured-items') {
-        query.categories = `${categoryId}`;
-    }
+  if (collection != 'hidden-homepage-carousel' && collection != 'hidden-homepage-featured-items') {
+    query.categories = `${categoryId}`;
+  }
 
-    const res = await ecwidFetch<EcwidPagedResult<EcwidNode>>({
-        method: 'GET',
-        path: `/products`,
-        query: query,
-        tags: [TAGS.products]
-    });
+  const res = await ecwidFetch<EcwidPagedResult<EcwidNode>>({
+    method: 'GET',
+    path: `/products`,
+    query: query,
+    tags: [TAGS.products]
+  });
 
-    if (res.body?.items) {
-        return reshapeProducts(res.body?.items);
-    }
+  if (res.body?.items) {
+    return reshapeProducts(res.body?.items);
+  }
 
-    console.log(`No collection found for \`${categoryId}\``);
-    return [];
+  console.log(`No collection found for \`${categoryId}\``);
+  return [];
 }
 
 export async function getProducts({
-    query,
-    reverse,
-    sortKey
+  query,
+  reverse,
+  sortKey
 }: {
-    query?: string;
-    reverse?: boolean;
-    sortKey?: string;
+  query?: string;
+  reverse?: boolean;
+  sortKey?: string;
 }): Promise<Product[]> {
-    var queryParams = <Record<string, string | string[]>>{};
+  const queryParams = <Record<string, string | string[]>>{};
 
-    queryParams.cleanUrls = 'true';
-    queryParams.baseUrl = '/';
+  queryParams.cleanUrls = 'true';
+  queryParams.baseUrl = '/';
 
-    if (query) {
-        queryParams.keyword = `${query}`;
-    }
+  if (query) {
+    queryParams.keyword = `${query}`;
+  }
 
-    if (sortKey && sortKey != 'relevance') {
-        queryParams.sortBy = `${sortKey}_${reverse ? 'desc' : 'asc'}`.toUpperCase();
-    }
+  if (sortKey && sortKey != 'relevance') {
+    queryParams.sortBy = `${sortKey}_${reverse ? 'desc' : 'asc'}`.toUpperCase();
+  }
 
-    const res = await ecwidFetch<EcwidPagedResult<EcwidNode>>({
-        method: 'GET',
-        path: `/products`,
-        query: queryParams,
-        tags: [TAGS.products]
-    });
+  const res = await ecwidFetch<EcwidPagedResult<EcwidNode>>({
+    method: 'GET',
+    path: `/products`,
+    query: queryParams,
+    tags: [TAGS.products]
+  });
 
-    return reshapeProducts(res.body?.items);
+  return reshapeProducts(res.body?.items);
 }
 
 export async function getProduct(handle: string): Promise<Product | undefined> {
-    let productId = handle.replace(/^.*?\-p/g, '');
+  const productId = handle.replace(/^.*?\-p/g, '');
 
-    const res = await ecwidFetch<EcwidNode>({
-        method: 'GET',
-        path: `/products/${productId}`,
-        tags: [TAGS.products]
-    });
+  const res = await ecwidFetch<EcwidNode>({
+    method: 'GET',
+    path: `/products/${productId}`,
+    tags: [TAGS.products]
+  });
 
-    return reshapeProduct(res.body);
+  return reshapeProduct(res.body);
 }
 
 export async function getProductRecommendations(productId: string): Promise<Product[]> {
-    // Get the product
-    const res = await ecwidFetch<EcwidNode>({
-        method: 'GET',
-        path: `/products/${productId}`,
-        tags: [TAGS.products]
-    });
+  // Get the product
+  const res = await ecwidFetch<EcwidNode>({
+    method: 'GET',
+    path: `/products/${productId}`,
+    tags: [TAGS.products]
+  });
 
-    let queryParams = <Record<string, string | string[]>>{};
+  const queryParams = <Record<string, string | string[]>>{};
 
-    const relates = <EcwidRelatedProducts>(res.body.relatedProducts || {});
+  const relates = <EcwidRelatedProducts>(res.body.relatedProducts || {});
 
-    if (relates.productIds?.length > 0) {
-        queryParams.productId = `${relates.productIds.join(',')}`;
-    }
+  if (relates.productIds?.length > 0) {
+    queryParams.productId = `${relates.productIds.join(',')}`;
+  }
 
-    if (relates.relatedCategory.enabled) {
-        let relatedCategory = `${relates.relatedCategory.categoryId}`;
-        queryParams.categories = 0 ? 'home' : relatedCategory;
+  if (relates.relatedCategory.enabled) {
+    const relatedCategory = `${relates.relatedCategory.categoryId}`;
+    queryParams.categories = 0 ? 'home' : relatedCategory;
 
-        queryParams.includeProductsFromSubcategories = 'true';
-        queryParams.limit = `${relates.relatedCategory.productCount}`;
-    }
+    queryParams.includeProductsFromSubcategories = 'true';
+    queryParams.limit = `${relates.relatedCategory.productCount}`;
+  }
 
-    if (!Object.keys(queryParams).length) {
-        return [];
-    }
+  if (!Object.keys(queryParams).length) {
+    return [];
+  }
 
-    queryParams.cleanUrls = 'true';
-    queryParams.baseUrl = '/';
+  queryParams.cleanUrls = 'true';
+  queryParams.baseUrl = '/';
 
-    const res2 = await ecwidFetch<EcwidPagedResult<EcwidNode>>({
-        method: 'GET',
-        path: `/products`,
-        tags: [TAGS.products],
-        query: queryParams
-    });
+  const res2 = await ecwidFetch<EcwidPagedResult<EcwidNode>>({
+    method: 'GET',
+    path: `/products`,
+    tags: [TAGS.products],
+    query: queryParams
+  });
 
-    // Return products filtering out current product
-    return reshapeProducts(res2.body?.items.filter((x) => x.id != productId));
+  // Return products filtering out current product
+  return reshapeProducts(res2.body?.items.filter((x) => x.id != productId));
 }
 
 // This is called from `app/api/revalidate.ts` so providers can control revalidation logic.
 export async function revalidate(req: NextRequest): Promise<NextResponse> {
-    // We always need to respond with a 200 status code to Ecwid,
-    // otherwise it will continue to retry the request.
-    const collectionWebhooks = ['category.created', 'category.deleted', 'category.updated'];
-    const productWebhooks = ['product.created', 'product.deleted', 'product.updated'];
-    const profileWebhooks = ['profile.updated'];
-    const { eventType } = await req.json();
-    const secret = headers().get('X-Ecwid-Revalidation-Secret') || 'unknown';
+  // We always need to respond with a 200 status code to Ecwid,
+  // otherwise it will continue to retry the request.
+  const collectionWebhooks = ['category.created', 'category.deleted', 'category.updated'];
+  const productWebhooks = ['product.created', 'product.deleted', 'product.updated'];
+  const profileWebhooks = ['profile.updated'];
+  const { eventType } = await req.json();
+  const h = await headers();
+  const secret = h.get('X-Ecwid-Revalidation-Secret') || 'unknown';
 
-    const isCollectionUpdate = collectionWebhooks.includes(eventType);
-    const isProductUpdate = productWebhooks.includes(eventType);
-    const isProfileUpdate = profileWebhooks.includes(eventType);
+  const isCollectionUpdate = collectionWebhooks.includes(eventType);
+  const isProductUpdate = productWebhooks.includes(eventType);
+  const isProfileUpdate = profileWebhooks.includes(eventType);
 
-    if (!secret || secret !== process.env.ECWID_REVALIDATION_SECRET) {
-        console.error('Invalid revalidation secret.');
-        return NextResponse.json({ status: 200 });
-    }
+  if (!secret || secret !== process.env.ECWID_REVALIDATION_SECRET) {
+    console.error('Invalid revalidation secret.');
+    return NextResponse.json({ status: 200 });
+  }
 
-    if (!isCollectionUpdate && !isProductUpdate && !isProfileUpdate) {
-        // We don't need to revalidate anything for any other topics.
-        return NextResponse.json({ status: 200 });
-    }
+  if (!isCollectionUpdate && !isProductUpdate && !isProfileUpdate) {
+    // We don't need to revalidate anything for any other topics.
+    return NextResponse.json({ status: 200 });
+  }
 
-    if (isProductUpdate) {
-        revalidateTag(TAGS.products);
-    }
+  if (isProductUpdate) {
+    revalidateTag(TAGS.products);
+  }
 
-    if (isCollectionUpdate) {
-        revalidateTag(TAGS.collections);
-    }
+  if (isCollectionUpdate) {
+    revalidateTag(TAGS.collections);
+  }
 
-    if (isProfileUpdate) {
-        revalidateTag(TAGS.profile);
-    }
+  if (isProfileUpdate) {
+    revalidateTag(TAGS.profile);
+  }
 
-    return NextResponse.json({ status: 200, revalidated: true, now: Date.now() });
+  return NextResponse.json({ status: 200, revalidated: true, now: Date.now() });
 }

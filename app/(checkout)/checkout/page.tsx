@@ -9,36 +9,37 @@ export const runtime = 'edge';
 export const revalidate = 43200; // 12 hours in seconds
 
 export async function generateMetadata({
-    params
+  params: _params
 }: {
-    params: { page: string };
+  params: Promise<{ page: string }>;
 }): Promise<Metadata> {
-    return {
-        title: 'Checkout',
-        description: ''
-    };
+  return {
+    title: 'Checkout',
+    description: ''
+  };
 }
 
-export default async function Page({ params }: { params: { page: string } }) {
-    const store_id = process.env.ECWID_STORE_ID!;
-    const body = '<div id="ecStoreProductBrowser">Loading checkout...</div>';
+export default async function Page({ params: _params }: { params: Promise<{ page: string }> }) {
+  const store_id = process.env.ECWID_STORE_ID!;
+  const body = '<div id="ecStoreProductBrowser">Loading checkout...</div>';
 
-    let cartId = cookies().get('cartId')?.value;
+  const cookieStore = await cookies();
+  const cartId = cookieStore.get('cartId')?.value;
 
-    return (
-        <>
-            <h1 className="mb-8 text-5xl font-bold">Checkout</h1>
-            <Prose className="mb-8" html={body as string} />
-            <Script id="ecStoreProductBrowser-script">
-                {`let checkout = {
+  return (
+    <>
+      <h1 className="mb-8 text-5xl font-bold">Checkout</h1>
+      <Prose className="mb-8" html={body as string} />
+      <Script id="ecStoreProductBrowser-script">
+        {`let checkout = {
                     id: '` +
-                    cartId +
-                    `',
+          cartId +
+          `',
                     itemsCount: 0
                 }
                 localStorage.setItem('ec-` +
-                    store_id +
-                    `-checkout', JSON.stringify(checkout));
+          store_id +
+          `-checkout', JSON.stringify(checkout));
 
                 let ecwidLoaded = false;
 
@@ -99,15 +100,15 @@ export default async function Page({ params }: { params: { page: string } }) {
                     var script = document.createElement('script');
                     script.type = 'text/javascript';
                     script.src = 'https://app.ecwid.com/script.js?` +
-                    store_id +
-                    `&data_platform=nextjs_commerce&storefront-v3=true';
+          store_id +
+          `&data_platform=nextjs_commerce&storefront-v3=true';
                     script.id = 'ecwid-script'
                     script.onload = load_ecwid
                     document.body.appendChild(script);
                 } else {
                     load_ecwid()
                 }`}
-            </Script>
-        </>
-    );
+      </Script>
+    </>
+  );
 }

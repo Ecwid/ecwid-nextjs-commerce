@@ -6,9 +6,11 @@ module.exports = {
       'error',
       {
         args: 'after-used',
+        argsIgnorePattern: '^_',
         caughtErrors: 'none',
         ignoreRestSiblings: true,
-        vars: 'all'
+        vars: 'all',
+        varsIgnorePattern: '^_'
       }
     ],
     'prefer-const': 'error',
