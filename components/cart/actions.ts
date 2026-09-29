@@ -17,7 +17,10 @@ export async function addItem(prevState: any, selectedVariantId: string | undefi
   if (!cartId || !cart) {
     cart = await createCart();
     cartId = cart.id;
-    cookieStore.set('cartId', cartId);
+    cookieStore.set('cartId', cartId, {
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production'
+    });
   }
 
   if (!selectedVariantId) {

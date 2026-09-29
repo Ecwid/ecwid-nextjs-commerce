@@ -33,7 +33,8 @@
     "geist": "^1.0.0",
     "next": "15.1.11",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "ultrahtml": "^1.7.0"
   },
   "devDependencies": {
     "@tailwindcss/container-queries": "^0.1.1",

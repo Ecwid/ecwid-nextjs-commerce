@@ -1,4 +1,5 @@
 import { isEcwidError } from 'lib/type-guards';
+import { sanitizeProductHtml } from './sanitize';
 
 import {
   Cart,
@@ -818,7 +819,13 @@ export async function getProduct(handle: string): Promise<Product | undefined> {
     tags: [TAGS.products]
   });
 
-  return reshapeProduct(res.body);
+  const product = reshapeProduct(res.body);
+
+  if (product) {
+    product.descriptionHtml = await sanitizeProductHtml(product.descriptionHtml);
+  }
+
+  return product;
 }
 
 export async function getProductRecommendations(productId: string): Promise<Product[]> {

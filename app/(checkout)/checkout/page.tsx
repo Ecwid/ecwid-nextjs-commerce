@@ -25,6 +25,7 @@ export default async function Page({ params: _params }: { params: Promise<{ page
 
   const cookieStore = await cookies();
   const cartId = cookieStore.get('cartId')?.value;
+  const safeCartId = JSON.stringify(cartId ?? '').replace(/</g, '\\u003c');
 
   return (
     <>
@@ -32,9 +33,9 @@ export default async function Page({ params: _params }: { params: Promise<{ page
       <Prose className="mb-8" html={body as string} />
       <Script id="ecStoreProductBrowser-script">
         {`let checkout = {
-                    id: '` +
-          cartId +
-          `',
+                    id: ` +
+          safeCartId +
+          `,
                     itemsCount: 0
                 }
                 localStorage.setItem('ec-` +
