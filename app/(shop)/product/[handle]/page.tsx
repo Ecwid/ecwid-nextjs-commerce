@@ -80,7 +80,7 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(productJsonLd)
+          __html: JSON.stringify(productJsonLd).replace(/</g, '\\u003c')
         }}
       />
       <div className="mx-auto max-w-screen-2xl px-4">
